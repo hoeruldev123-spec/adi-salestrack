@@ -18,7 +18,7 @@ class CreateCustomersTable extends Migration
             'updated_at'    => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('customers', true);
+        $this->forge->createTable('customers');
     }
 
     public function down()

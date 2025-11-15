@@ -5,8 +5,15 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
+
+// WEB ROUTES (HTML)
+$routes->get('/', 'Home::index');
+$routes->get('/login', 'Web\AuthController::login');
+
 $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
+
     // Customer API
+    $routes->get('login', 'AuthController::login');
     $routes->get('customers', 'CustomerController::index');
     $routes->get('customers/(:num)', 'CustomerController::show/$1');
     $routes->post('customers', 'CustomerController::create');
