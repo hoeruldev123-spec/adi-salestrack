@@ -81,12 +81,11 @@ class UserController extends BaseController
         }
 
         $payload = [
-            'iss'  => base_url(),
-            'aud'  => base_url(),
-            'iat'  => time(),
-            'exp'  => time() + 3600, // 1 jam
-            'uid'  => $user['id'],
-            'role' => $user['role']
+            'id'    => $user['id'],  // WAJIB
+            'email' => $user['email'],
+            'role'  => $user['role'],
+            'iat'   => time(),
+            'exp'   => time() + 86400 // expired 1 hari
         ];
 
         $token = JWT::encode($payload, $this->key, 'HS256');
@@ -113,22 +112,28 @@ class UserController extends BaseController
     // =====================
     // PROFILE (JWT)
     // =====================
-    public function profile()
+   public function profile()
     {
-        $userData = $this->request->user; // diisi oleh filter JwtAuth
-        $user = $this->model->find($userData['uid']);
+        $user = $this->request->user; // hasil JWT decode
 
-        if (!$user) {
+        if (!$user || !isset($user->id)) {
+            return $this->failUnauthorized('Token missing id');
+        }
+
+        $data = $this->model->find($user->id);
+
+        if (!$data) {
             return $this->failNotFound('User not found');
         }
 
-        unset($user['password']);
+        unset($data['password']); // jangan kirim password ke response
 
         return $this->respond([
             'status' => 200,
-            'data'   => $user
+            'data'   => $data
         ]);
     }
+
 
     // =====================
     // UPDATE PROFILE (JWT)
@@ -137,7 +142,7 @@ class UserController extends BaseController
     {
         $input = $this->request->getJSON();
         $userData = $this->request->user;
-        $user = $this->model->find($userData['uid']);
+        $user = $this->model->find($userData['id']);
 
         if (!$user) {
             return $this->failNotFound('User not found');
@@ -155,7 +160,7 @@ class UserController extends BaseController
             $updateData['password'] = password_hash($input->password, PASSWORD_DEFAULT);
         }
 
-        $this->model->update($userData['uid'], $updateData);
+        $this->model->update($userData['id'], $updateData);
 
         return $this->respond([
             'status'  => 200,

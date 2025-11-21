@@ -2,62 +2,49 @@
 
 namespace App\Filters;
 
+use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
-use CodeIgniter\Filters\FilterInterface;
-use \Firebase\JWT\JWT;
-use \Firebase\JWT\Key;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Config\Services;
 
 class JwtAuth implements FilterInterface
 {
-    private $key = 'secret_key_adi_salestrack'; // harus sama dengan di UserController
-
     public function before(RequestInterface $request, $arguments = null)
     {
-        $header = $request->getHeaderLine('Authorization');
+        $authHeader = $request->getHeaderLine('Authorization');
 
-        if (!$header) {
-            return service('response')->setJSON([
-                'status' => 401,
-                'message' => 'Authorization header missing'
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            return Services::response()->setJSON([
+                'error' => 'Token required'
             ])->setStatusCode(401);
         }
 
-        if (!preg_match('/Bearer\s(\S+)/', $header, $matches)) {
-            return service('response')->setJSON([
-                'status' => 401,
-                'message' => 'Bearer token not found'
-            ])->setStatusCode(401);
-        }
-
-        $token = $matches[1];
+        $token = str_replace('Bearer ', '', $authHeader);
 
         try {
-            $decoded = JWT::decode($token, new Key($this->key, 'HS256'));
-            // Simpan data user di request
-            $request->user = (array)$decoded;
-
-            // Cek role jika disertakan di argumen
-            if ($arguments && isset($arguments[0])) {
-                $roleRequired = $arguments[0];
-                if ($decoded->role != $roleRequired) {
-                    return service('response')->setJSON([
-                        'status' => 403,
-                        'message' => 'Access denied'
-                    ])->setStatusCode(403);
-                }
-            }
+            $decoded = JWT::decode($token, new Key(getenv('JWT_SECRET'), 'HS256'));
         } catch (\Exception $e) {
-            return service('response')->setJSON([
-                'status' => 401,
-                'message' => 'Invalid or expired token',
-                'error' => $e->getMessage()
+            return Services::response()->setJSON([
+                'error' => 'Invalid Token',
+                'message' => $e->getMessage()
             ])->setStatusCode(401);
         }
+
+        // ROLE CHECK
+        if ($arguments && !in_array($decoded->role, $arguments)) {
+            return Services::response()->setJSON([
+                'error' => 'Access Denied'
+            ])->setStatusCode(403);
+        }
+
+        // simpan user
+        $request->user = $decoded;
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        // Tidak perlu apa-apa
+        // nothing
     }
 }

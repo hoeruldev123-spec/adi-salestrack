@@ -3,8 +3,6 @@
 namespace App\Database\Seeds;
 
 use CodeIgniter\Database\Seeder;
-use CodeIgniter\Test\Fabricator;
-use App\Models\UserModel;
 
 class UserSeeder extends Seeder
 {
@@ -12,28 +10,32 @@ class UserSeeder extends Seeder
     {
         $data = [
             [
-                'username'   => 'admin',
-                'email'      => 'admin@adisalestrack.com',
-                'password'   => password_hash('admin123', PASSWORD_DEFAULT),
-                'role'       => 'admin',
-                'created_at' => date('Y-m-d H:i:s'),
+                'username' => 'admin',
+                'email'    => 'admin@example.com',
+                'password' => password_hash('password123', PASSWORD_DEFAULT),
+                'role'     => 'admin',
             ],
             [
-                'username'   => 'sales01',
-                'email'      => 'sales01@adisalestrack.com',
-                'password'   => password_hash('sales123', PASSWORD_DEFAULT),
-                'role'       => 'sales',
-                'created_at' => date('Y-m-d H:i:s'),
+                'username' => 'salesuser',
+                'email'    => 'sales@example.com',
+                'password' => password_hash('password123', PASSWORD_DEFAULT),
+                'role'     => 'sales',
             ],
             [
-                'username'   => 'manager',
-                'email'      => 'manager@adisalestrack.com',
-                'password'   => password_hash('manager123', PASSWORD_DEFAULT),
-                'role'       => 'manager',
-                'created_at' => date('Y-m-d H:i:s'),
+                'username' => 'financeuser',
+                'email'    => 'finance@example.com',
+                'password' => password_hash('password123', PASSWORD_DEFAULT),
+                'role'     => 'finance',
+            ],
+            [
+                'username' => 'management',
+                'email'    => 'management@example.com',
+                'password' => password_hash('password123', PASSWORD_DEFAULT),
+                'role'     => 'management',
             ],
         ];
 
+        // Insert batch
         $this->db->table('users')->insertBatch($data);
     }
 }

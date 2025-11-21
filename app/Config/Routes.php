@@ -6,24 +6,34 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-// WEB ROUTES (HTML)
-$routes->get('/', 'Home::index');
-$routes->get('/login', 'Web\AuthController::login');
+$routes->group('api', function($routes) {
 
-$routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
+    // Auth
+    $routes->post('login', 'Api\AuthController::login');
 
-    // Customer API
-    $routes->get('login', 'AuthController::login');
-    $routes->get('customers', 'CustomerController::index');
-    $routes->get('customers/(:num)', 'CustomerController::show/$1');
-    $routes->post('customers', 'CustomerController::create');
-    $routes->put('customers/(:num)', 'CustomerController::update/$1');
-    $routes->delete('customers/(:num)', 'CustomerController::delete/$1');
+    // Hanya butuh token (tanpa cek role)
+    $routes->group('', ['filter' => 'jwt'], function($routes) {
+        $routes->get('profile', 'Api\UserController::profile');
+    });
 
-    // User API
-    $routes->post('register', 'UserController::register');
-    $routes->post('login', 'UserController::login');
-    $routes->get('users', 'UserController::index', ['filter' => 'jwt:admin']);
-    $routes->get('profile', 'UserController::profile', ['filter' => 'jwt']);
-    $routes->put('profile', 'UserController::updateProfile', ['filter' => 'jwt']);
+    // Sales
+    $routes->group('sales', ['filter' => 'jwt:sales,admin'], function ($routes) {
+        $routes->post('activity', 'Api\SalesActivityController::create');
+    });
+
+    // Finance
+    $routes->group('finance', ['filter' => 'jwt:finance,admin'], function ($routes) {
+        $routes->get('invoices', 'Api\FinanceController::index');
+    });
+
+    // Management
+    $routes->group('management', ['filter' => 'jwt:management,admin'], function ($routes) {
+        $routes->get('dashboard', 'Api\DashboardController::summary');
+    });
+
+    // Admin
+    $routes->group('admin', ['filter' => 'jwt:admin'], function ($routes) {
+        $routes->post('create-user', 'Api\AdminController::createUser');
+    });
+
 });
